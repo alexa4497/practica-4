@@ -159,6 +159,8 @@ void cargarTopologiaFija(Network& red) {
     }
 }
 
+
+/*
 void menuTopologiaFija(Network& red) {
     // Si la red esta vacia (ej. al inicio), intenta cargar la topologia fija.
     if (red.routers.empty()) {
@@ -196,7 +198,7 @@ void menuTopologiaFija(Network& red) {
     } while (opcion != 0);
 }
 
-
+*/
 // === LOGICA DE TOPOLOGIA MODIFICADA (OPCION 2) ===
 
 void menuCargarTopologia(Network& red) {
@@ -351,7 +353,7 @@ int main() {
         cout << "\n==============================================" << endl;
         cout << "  MENU PRINCIPAL " << endl;
         cout << "==============================================" << endl;
-        cout << "1. Funciones con Topologia Fija (Carga 'topologia.txt')" << endl;
+       // cout << "1. Funciones con Topologia Fija (Carga 'topologia.txt')" << endl;
         cout << "2. Funciones con Topologia Modificada" << endl;
         cout << "3. Generar Topologia Aleatoria " << endl;
         cout << "0. Salir del Programa" << endl;
@@ -363,7 +365,7 @@ int main() {
         }
 
         switch (opcion) {
-        case 1: menuTopologiaFija(red); break;
+       // case 1: menuTopologiaFija(red); break;
         case 2: menuTopologiaModificada(red); break;
         case 3: menuRedAleatoria(red); break;
         case 0: cout << "Saliendo del programa. Adios." << endl; break;

@@ -32,12 +32,11 @@ public:
     void cargarTopologia(const string& archivo);
     void cambiarIdRouter(int id_actual, int nuevo_id);
 
-    void removerRouter(int id);   // <- NUEVA DECLARACIÓN
+    void removerRouter(int id);
     void removerEnlace(int id1, int id2);
 
     Network() : gen(std::time(0)) {}
 
-    // Función para generar red aleatoria
     void generarRedAleatoria(int num_routers);
 
 

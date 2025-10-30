@@ -70,7 +70,6 @@ void Network::cambiarIdRouter(int id_actual, int nuevo_id) {
 }
 
 void Network::actualizarTablas() {
-    // El output de recalculando tablas ha sido silenciado.
     for (auto const& [id, router] : routers) {
         router->dijkstra(this);
     }
@@ -87,14 +86,14 @@ void Network::removerEnlace(int id1, int id2) {
         r2->removerVecino(id1);
         cout << "Enlace entre " << id1 << " y " << id2 << " removido." << endl;
     } else {
-        cerr << "Error: Router(s) no encontrado(s) al intentar remover enlace." << endl;
+        cout << "Error: Router(s) no encontrado(s) al intentar remover enlace." << endl;
     }
 }
 
 // Implementación para remover un router (debe limpiar todos sus enlaces antes)
 void Network::removerRouter(int id) {
     if (!routers.count(id)) {
-        cerr << "Error: El Router con ID " << id << " no existe." << endl;
+        cout << "Error: El Router con ID " << id << " no existe." << endl;
         return;
     }
 
@@ -172,7 +171,7 @@ void Network::generarRedAleatoria(int num_routers) {
         agregarRouter(i);
     }
 
-    // 2. Distribución para costos (1-10)
+
     std::uniform_int_distribution<int> dist_costo(1, 10);
     std::uniform_real_distribution<double> dist_prob(0.0, 1.0);
 
