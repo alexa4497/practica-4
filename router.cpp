@@ -67,21 +67,20 @@ void Router::reinicio() {
 }
 
 void Router::dijkstra(Network* network) {
-    // 1. REINICIAR todos los routers
+
     for (auto const& [id, router] : network->routers) {
         router->distancia = numeric_limits<int>::max();
         router->previo = nullptr;
         router->visitado = false;
     }
 
-    // 2. INICIALIZAR router fuente
     this->distancia = 0;
 
-    // 3. Priority_queue para min-heap
+
     priority_queue<pair<int, Router*>, vector<pair<int, Router*>>, greater<pair<int, Router*>>> pq;
     pq.push({0, this});
 
-    // 4. ALGORITMO DIJKSTRA
+    //ALGORITMO DIJKSTRA
     while (!pq.empty()) {
         Router* actual = pq.top().second;
         int dist_actual = pq.top().first;
@@ -108,7 +107,7 @@ void Router::dijkstra(Network* network) {
         }
     }
 
-    // 5. CONSTRUIR TABLA DE ENRUTAMIENTO - MÉTODO CORREGIDO
+
     this->tablaEnrutamiento.clear();
 
     for (auto const& [destino_id, destino_router] : network->routers) {
@@ -116,18 +115,15 @@ void Router::dijkstra(Network* network) {
             // Para sí mismo
             tablaEnrutamiento[destino_id] = {0, this->idRouter};
         } else if (destino_router->distancia == numeric_limits<int>::max()) {
-            // Inalcanzable
+
             tablaEnrutamiento[destino_id] = {numeric_limits<int>::max(), -1};
         } else {
-            // MÉTODO CORRECTO: Encontrar el PRIMER VECINO en el camino
             Router* temp = destino_router;
 
-            // Retroceder hasta el PRIMER router después del origen
             while (temp->previo != nullptr && temp->previo != this) {
                 temp = temp->previo;
             }
 
-            // El siguiente salto es el router 'temp'
             tablaEnrutamiento[destino_id] = {destino_router->distancia, temp->idRouter};
         }
     }
@@ -145,19 +141,16 @@ std::vector<int> Router::obtenerCaminoMasCorto(int destino_id) const {
         return camino;
     }
 
-    // SOLUCIÓN SIMPLE Y EFECTIVA:
-    // 1. Siempre empezar con el origen
+
     camino.push_back(idRouter);
 
-    // 2. Obtener el siguiente salto desde la tabla
     int siguiente_salto = it->second.second;
 
-    // 3. Si el siguiente salto no es el destino, agregarlo
+
     if (siguiente_salto != -1 && siguiente_salto != destino_id) {
         camino.push_back(siguiente_salto);
     }
 
-    // 4. Siempre terminar con el destino
     if (destino_id != idRouter) {
         camino.push_back(destino_id);
     }

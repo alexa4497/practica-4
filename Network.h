@@ -6,10 +6,15 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <random>
+#include <ctime>
 
 using namespace std;
 
 class Network {
+private:
+    mt19937 gen;
+
 public:
     map<int, Router*> routers;
 
@@ -29,6 +34,13 @@ public:
 
     void removerRouter(int id);   // <- NUEVA DECLARACIÓN
     void removerEnlace(int id1, int id2);
+
+    Network() : gen(std::time(0)) {}
+
+    // Función para generar red aleatoria
+    void generarRedAleatoria(int num_routers);
+
+
 
 };
 

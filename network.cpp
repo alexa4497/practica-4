@@ -115,7 +115,7 @@ void Network::removerRouter(int id) {
     cout << "Router " << id << " y todos sus enlaces removidos." << endl;
 }
 
-// Implementación para cargar topología desde archivo (Punto B.c)
+
 void Network::cargarTopologia(const string& archivo) {
     ifstream file(archivo);
     if (!file.is_open()) {
@@ -133,7 +133,7 @@ void Network::cargarTopologia(const string& archivo) {
     cout << "Cargando topologia desde archivo..." << endl;
 
     while (getline(file, line)) {
-        if (line.empty() || line[0] == '#') continue; // Ignorar lineas vacias o comentarios
+        if (line.empty() || line[0] == '#') continue;
 
         stringstream ss(line);
         string tipo;
@@ -159,4 +159,50 @@ void Network::cargarTopologia(const string& archivo) {
     if (routers.empty()) {
         cerr << "ADVERTENCIA: Archivo leido pero no se creo ningun router." << endl;
     }
+}
+void Network::generarRedAleatoria(int num_routers) {
+    // Limpiar red existente
+    for (auto const& [id, router] : routers) {
+        delete router;
+    }
+    routers.clear();
+
+
+    for (int i = 1; i <= num_routers; ++i) {
+        agregarRouter(i);
+    }
+
+    // 2. Distribución para costos (1-10)
+    std::uniform_int_distribution<int> dist_costo(1, 10);
+    std::uniform_real_distribution<double> dist_prob(0.0, 1.0);
+
+    // 3. Crear enlaces aleatorios - aproximadamente 40% de densidad
+    for (int i = 1; i <= num_routers; ++i) {
+        for (int j = i + 1; j <= num_routers; ++j) {
+            // 40% de probabilidad de crear enlace
+            if (dist_prob(gen) < 0.4) {
+                int costo = dist_costo(gen);
+                agregarEnlace(i, j, costo);
+            }
+        }
+    }
+
+    // 4. Garantizar que la red esté conectada
+    for (int i = 2; i <= num_routers; ++i) {
+        bool tiene_enlace = false;
+        Router* r = getRouter(i);
+        if (r && !r->vecinos.empty()) {
+            tiene_enlace = true;
+        }
+
+        if (!tiene_enlace) {
+
+            std::uniform_int_distribution<int> dist_router(1, i-1);
+            int router_destino = dist_router(gen);
+            int costo = dist_costo(gen);
+            agregarEnlace(i, router_destino, costo);
+        }
+    }
+
+    cout << "Red aleatoria generada con " << num_routers << " routers." << endl;
 }

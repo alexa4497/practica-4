@@ -10,7 +10,7 @@
 
 using namespace std;
 
-// === FUNCIONES DE SOPORTE ===
+
 
 // Función crucial para limpiar el flujo de entrada en caso de error (e.g., si se ingresa una letra en lugar de un número)
 void limpiarEntrada() {
@@ -29,19 +29,6 @@ void mostrarTodasLasTablas(Network& red) {
 }
 
 
-// === FUNCIONES COMPARTIDAS (Consultas C y D, y Modificacion) ===
-
-
-// Asegurese de que la funcion limpiarEntrada() este definida en main.cpp:
-// void limpiarEntrada() {
-//     cin.clear();
-//     cin.ignore(numeric_limits<streamsize>::max(), '\n');
-// }
-
-
-
-// === FUNCIONES COMPARTIDAS (Consultas C y D, y Modificacion) ===
-// ... (omitted code) ...
 
 void menuConsultarRuta(Network& red) {
     if (red.routers.empty()) {
@@ -115,10 +102,6 @@ void menuConsultarRuta(Network& red) {
     cout << endl;
     cout << "--------------------------------------" << endl;
 }
-
-
-
-
 
 
 void menuCambiarId(Network& red) {
@@ -218,7 +201,7 @@ void menuTopologiaFija(Network& red) {
 
 void menuCargarTopologia(Network& red) {
     string nombre_archivo;
-    cout << "\n--- Cargar Topologia Modificada desde Archivo (B.c) ---" << endl;
+    cout << "\n--- Cargar Topologia Modificada desde Archivo ---" << endl;
     cout << "Ingrese el nombre del archivo de topologia (ej: prueba1.txt): ";
     // La lectura de string se deja asi.
     cin >> nombre_archivo;
@@ -248,7 +231,7 @@ void menuAgregarRouter(Network& red) {
 
 void menuRemoverRouter(Network& red) {
     int id;
-    cout << "\n--- Remover Router (B.a) ---" << endl;
+    cout << "\n--- Remover Router ---" << endl;
     cout << "Ingrese el ID del Router a remover: ";
     if (!(cin >> id)) { limpiarEntrada(); return; }
 
@@ -260,7 +243,7 @@ void menuRemoverRouter(Network& red) {
 void menuAgregarEnlace(Network& red) {
     if (red.routers.empty()) { cerr << "Error: No hay routers. Use la opcion 'Cargar Topologia' o 'Agregar Router' primero." << endl; return; }
     int origen, destino, costo;
-    cout << "\n--- Agregar Enlace (B.a) ---" << endl;
+    cout << "\n--- Agregar Enlace ---" << endl;
     cout << "Origen ID: ";
     if (!(cin >> origen)) { limpiarEntrada(); return; }
     cout << "Destino ID: ";
@@ -280,7 +263,7 @@ void menuAgregarEnlace(Network& red) {
 void menuRemoverEnlace(Network& red) {
     if (red.routers.empty()) { cerr << "Error: No hay red configurada." << endl; return; }
     int origen, destino;
-    cout << "\n--- Remover Enlace (B.a) ---" << endl;
+    cout << "\n--- Remover Enlace ---" << endl;
     cout << "Origen ID: ";
     if (!(cin >> origen)) { limpiarEntrada(); return; }
     cout << "Destino ID: ";
@@ -298,11 +281,11 @@ void menuTopologiaModificada(Network& red) {
         cout << "\n==============================================" << endl;
         cout << "  MENU - FUNCIONES CON TOPOLOGIA MODIFICADA " << endl;
         cout << "==============================================" << endl;
-        cout << "1. Cargar Topologia desde Archivo (B.c)" << endl;
-        cout << "2. Agregar Router (B.a)" << endl;
-        cout << "3. Remover Router (B.a)" << endl;
-        cout << "4. Agregar Enlace (B.a)" << endl;
-        cout << "5. Remover Enlace (B.a)" << endl;
+        cout << "1. Cargar Topologia desde Archivo" << endl;
+        cout << "2. Agregar Router " << endl;
+        cout << "3. Remover Router " << endl;
+        cout << "4. Agregar Enlace " << endl;
+        cout << "5. Remover Enlace " << endl;
         cout << "6. Cambiar Costo de un Enlace" << endl;
         cout << "7. Ver Tablas de Enrutamiento" << endl;
         cout << "8. Consultar Costo y Ruta (C y D)" << endl;
@@ -329,9 +312,35 @@ void menuTopologiaModificada(Network& red) {
     } while (opcion != 0);
 }
 
+void menuRedAleatoria(Network& red) {
+    int num_routers;
+
+    cout << "\n--- Generar Red Aleatoria (E) ---" << endl;
+
+    cout << "Ingrese el número de routers (2-20): ";
+    if (!(cin >> num_routers) || num_routers < 2 || num_routers > 20) {
+        limpiarEntrada();
+        cout << "Numero invalido. Usando valor por defecto: 5" << endl;
+        num_routers = 5;
+    }
+
+
+    red.generarRedAleatoria(num_routers);
+
+
+    red.actualizarTablas();
+
+    cout << "Red aleatoria generada exitosamente con " << num_routers << " routers!" << endl;
+
+
+    cout << "\n*** Tablas de Enrutamiento de la Red Aleatoria ***" << endl;
+    mostrarTodasLasTablas(red);
+
+    cout << "\nAhora puede usar todas las funciones sobre esta red:" << endl;
+    menuTopologiaModificada(red);
+}
 
 // === MENU PRINCIPAL ===
-
 int main() {
     cout << "=== Simulacion de Red de Enrutadores ===" << endl;
 
@@ -344,7 +353,7 @@ int main() {
         cout << "==============================================" << endl;
         cout << "1. Funciones con Topologia Fija (Carga 'topologia.txt')" << endl;
         cout << "2. Funciones con Topologia Modificada" << endl;
-        cout << "3. Funciones con Topologia Aleatoria (Proximamente)" << endl;
+        cout << "3. Generar Topologia Aleatoria " << endl;
         cout << "0. Salir del Programa" << endl;
         cout << "Ingrese su opcion: ";
 
@@ -356,7 +365,7 @@ int main() {
         switch (opcion) {
         case 1: menuTopologiaFija(red); break;
         case 2: menuTopologiaModificada(red); break;
-        case 3: cerr << "Opcion no implementada aun." << endl; break;
+        case 3: menuRedAleatoria(red); break;
         case 0: cout << "Saliendo del programa. Adios." << endl; break;
         default: cerr << "Opcion invalida. Intente de nuevo." << endl; break;
         }
