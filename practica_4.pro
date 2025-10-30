@@ -4,4 +4,10 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 SOURCES += \
-        main.cpp
+        main.cpp \
+        network.cpp \
+        router.cpp
+
+HEADERS += \
+    Network.h \
+    Router.h
