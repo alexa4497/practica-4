@@ -1,14 +1,22 @@
 #include "Network.h"
+#include "Router.h"
 #include <iostream>
 #include <limits>
 #include <cstdlib>
 #include <vector>
 #include <tuple>
 #include <string>
+#include <algorithm>
 
 using namespace std;
 
 // === FUNCIONES DE SOPORTE ===
+
+// Función crucial para limpiar el flujo de entrada en caso de error (e.g., si se ingresa una letra en lugar de un número)
+void limpiarEntrada() {
+    cin.clear();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+}
 
 void mostrarTodasLasTablas(Network& red) {
     if (red.routers.empty()) {
@@ -20,25 +28,111 @@ void mostrarTodasLasTablas(Network& red) {
     }
 }
 
-// === FUNCIONES COMPARTIDAS (Cambiar ID/Costo) ===
+
+// === FUNCIONES COMPARTIDAS (Consultas C y D, y Modificacion) ===
+
+
+// Asegurese de que la funcion limpiarEntrada() este definida en main.cpp:
+// void limpiarEntrada() {
+//     cin.clear();
+//     cin.ignore(numeric_limits<streamsize>::max(), '\n');
+// }
+
+
+
+// === FUNCIONES COMPARTIDAS (Consultas C y D, y Modificacion) ===
+// ... (omitted code) ...
+
+void menuConsultarRuta(Network& red) {
+    if (red.routers.empty()) {
+        cerr << "Error: No hay red configurada para consultar rutas." << endl;
+        return;
+    }
+
+    int origen_id, destino_id;
+    cout << "\n--- Consultar Costo y Camino Mas Corto (C y D) ---" << endl;
+
+    cout << "Ingrese el ID del Router Origen: ";
+    if (!(cin >> origen_id)) {
+        limpiarEntrada();
+        cerr << "Error: ID de Origen invalido." << endl;
+        return;
+    }
+
+    cout << "Ingrese el ID del Router Destino: ";
+    if (!(cin >> destino_id)) {
+        limpiarEntrada();
+        cerr << "Error: ID de Destino invalido." << endl;
+        return;
+    }
+
+    Router* origen = red.getRouter(origen_id);
+    Router* destino = red.getRouter(destino_id);
+
+    if (!origen) {
+        cerr << "Error: Router Origen " << origen_id << " no existe." << endl;
+        return;
+    }
+    if (!destino) {
+        cerr << "Error: Router Destino " << destino_id << " no existe." << endl;
+        return;
+    }
+
+    // EJECUTAR DIJKSTRA para el router origen
+    origen->dijkstra(&red);
+
+    // Obtener costo
+    auto it = origen->tablaEnrutamiento.find(destino_id);
+    if (it == origen->tablaEnrutamiento.end()) {
+        cerr << "Error: Destino no encontrado en tabla." << endl;
+        return;
+    }
+
+    int costo_total = it->second.first;
+
+    cout << "\nRESULTADOS DEL ENRUTAMIENTO" << endl;
+    cout << "--------------------------------------" << endl;
+    cout << "C. Costo Total Mas Bajo: " << (costo_total == numeric_limits<int>::max() ? "INF" : to_string(costo_total)) << endl;
+
+    // Obtener camino
+    vector<int> camino = origen->obtenerCaminoMasCorto(destino_id);
+
+    cout << "D. Camino Eficiente (Ruta): ";
+    if (camino.empty()) {
+        if (costo_total == numeric_limits<int>::max()) {
+            cout << "NO ALCANZABLE";
+        } else {
+            cout << "ERROR EN RUTA";
+        }
+    } else {
+        for (size_t i = 0; i < camino.size(); ++i) {
+            cout << camino[i];
+            if (i < camino.size() - 1) {
+                cout << " -> ";
+            }
+        }
+    }
+    cout << endl;
+    cout << "--------------------------------------" << endl;
+}
+
+
+
+
+
 
 void menuCambiarId(Network& red) {
-    if (red.routers.empty()) {
-        cerr << "Error: No hay red configurada." << endl;
-        return;
-    }
+    if (red.routers.empty()) { cerr << "Error: No hay red configurada." << endl; return; }
     int id_actual, nuevo_id;
     cout << "\n--- Cambiar ID de Router ---" << endl;
-    cout << "Ingrese el ID actual del Router a modificar: ";
-    if (!(cin >> id_actual)) return;
 
-    if (!red.getRouter(id_actual)) {
-        cerr << "Error: Router con ID " << id_actual << " no existe." << endl;
-        return;
-    }
+    cout << "Ingrese el ID actual del Router a modificar: ";
+    if (!(cin >> id_actual)) { limpiarEntrada(); return; }
+
+    if (!red.getRouter(id_actual)) { cerr << "Error: Router con ID " << id_actual << " no existe." << endl; return; }
 
     cout << "Ingrese el nuevo ID para el Router " << id_actual << ": ";
-    if (!(cin >> nuevo_id)) return;
+    if (!(cin >> nuevo_id)) { limpiarEntrada(); return; }
 
     red.cambiarIdRouter(id_actual, nuevo_id);
     red.actualizarTablas();
@@ -46,21 +140,18 @@ void menuCambiarId(Network& red) {
 }
 
 void menuCambiarCosto(Network& red) {
-    if (red.routers.empty()) {
-        cerr << "Error: No hay red configurada." << endl;
-        return;
-    }
+    if (red.routers.empty()) { cerr << "Error: No hay red configurada." << endl; return; }
     int c_origen, c_destino, c_nuevo_costo;
 
     cout << "\n--- Cambiar Costo de Enlace ---" << endl;
     cout << "Ingrese el Router Origen del enlace a modificar: ";
-    if (!(cin >> c_origen)) return;
+    if (!(cin >> c_origen)) { limpiarEntrada(); return; }
 
     cout << "Ingrese el Router Destino del enlace a modificar: ";
-    if (!(cin >> c_destino)) return;
+    if (!(cin >> c_destino)) { limpiarEntrada(); return; }
 
     cout << "Ingrese el NUEVO COSTO para el enlace directo: ";
-    if (!(cin >> c_nuevo_costo)) return;
+    if (!(cin >> c_nuevo_costo)) { limpiarEntrada(); return; }
 
     red.cambiarCostoEnlace(c_origen, c_destino, c_nuevo_costo);
     red.actualizarTablas();
@@ -80,16 +171,19 @@ void cargarTopologiaFija(Network& red) {
         red.actualizarTablas();
         cout << "Topologia Fija cargada. Puede empezar a modificar ID/Costos." << endl;
     } else {
-        cerr << "ERROR: No se pudo cargar la topologia fija. Asegurese de que el archivo '" << NOMBRE_ARCHIVO_FIJO << "' existe." << endl;
+        // Mensaje de error más claro si la carga falla
+        cerr << "ERROR FATAL: No se pudo cargar la topologia fija. Asegurese de que el archivo '" << NOMBRE_ARCHIVO_FIJO << "' existe." << endl;
     }
 }
 
 void menuTopologiaFija(Network& red) {
+    // Si la red esta vacia (ej. al inicio), intenta cargar la topologia fija.
     if (red.routers.empty()) {
         cargarTopologiaFija(red);
     }
 
-    if (red.routers.empty()) return; // Si la carga falló, salir.
+    // Si la carga falló (archivo no encontrado), regresa al menu principal inmediatamente.
+    if (red.routers.empty()) return;
 
     int opcion;
     do {
@@ -99,16 +193,23 @@ void menuTopologiaFija(Network& red) {
         cout << "1. Cambiar ID de un Router" << endl;
         cout << "2. Cambiar Costo de un Enlace" << endl;
         cout << "3. Ver Tablas de Enrutamiento" << endl;
+        cout << "4. Consultar Costo y Ruta (C y D)" << endl;
         cout << "0. Regresar al Menu Principal" << endl;
         cout << "Ingrese su opcion: ";
 
         if (!(cin >> opcion)) {
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            limpiarEntrada();
             opcion = -1;
         }
 
-        // ... (Switch case para opciones 1, 2, 3, 0)
+        switch (opcion) {
+        case 1: menuCambiarId(red); break;
+        case 2: menuCambiarCosto(red); break;
+        case 3: cout << "\n*** Tablas de Enrutamiento Actuales ***" << endl; mostrarTodasLasTablas(red); break;
+        case 4: menuConsultarRuta(red); break;
+        case 0: cout << "Regresando al menu principal." << endl; break;
+        default: cerr << "Opcion invalida. Intente de nuevo." << endl; break;
+        }
     } while (opcion != 0);
 }
 
@@ -117,8 +218,9 @@ void menuTopologiaFija(Network& red) {
 
 void menuCargarTopologia(Network& red) {
     string nombre_archivo;
-    cout << "\n--- Cargar Topologia Modificada desde Archivo (Punto B.c) ---" << endl;
+    cout << "\n--- Cargar Topologia Modificada desde Archivo (B.c) ---" << endl;
     cout << "Ingrese el nombre del archivo de topologia (ej: prueba1.txt): ";
+    // La lectura de string se deja asi.
     cin >> nombre_archivo;
 
     red.cargarTopologia(nombre_archivo);
@@ -127,20 +229,17 @@ void menuCargarTopologia(Network& red) {
         red.actualizarTablas();
         cout << "Topologia cargada desde '" << nombre_archivo << "' y tablas calculadas." << endl;
     } else {
-        cerr << "ADVERTENCIA: No se pudo cargar la topologia desde el archivo." << endl;
+        cerr << "ADVERTENCIA: No se pudo cargar la topologia desde el archivo. Verifique el nombre." << endl;
     }
 }
 
 void menuAgregarRouter(Network& red) {
     int id;
-    cout << "\n--- Agregar Nuevo Router (Punto B.a) ---" << endl;
+    cout << "\n--- Agregar Nuevo Router (B.a) ---" << endl;
     cout << "Ingrese el ID (numero) para el nuevo Router: ";
-    if (!(cin >> id)) return;
+    if (!(cin >> id)) { limpiarEntrada(); return; }
 
-    if (red.getRouter(id)) {
-        cerr << "Error: El Router con ID " << id << " ya existe." << endl;
-        return;
-    }
+    if (red.getRouter(id)) { cerr << "Error: El Router con ID " << id << " ya existe." << endl; return; }
 
     red.agregarRouter(id);
     cout << "Router " << id << " agregado exitosamente." << endl;
@@ -149,9 +248,9 @@ void menuAgregarRouter(Network& red) {
 
 void menuRemoverRouter(Network& red) {
     int id;
-    cout << "\n--- Remover Router (Punto B.a) ---" << endl;
+    cout << "\n--- Remover Router (B.a) ---" << endl;
     cout << "Ingrese el ID del Router a remover: ";
-    if (!(cin >> id)) return;
+    if (!(cin >> id)) { limpiarEntrada(); return; }
 
     red.removerRouter(id);
     red.actualizarTablas();
@@ -159,18 +258,15 @@ void menuRemoverRouter(Network& red) {
 }
 
 void menuAgregarEnlace(Network& red) {
-    if (red.routers.empty()) {
-        cerr << "Error: No hay routers. Use la opcion 'Cargar Topologia' o 'Agregar Router' primero." << endl;
-        return;
-    }
+    if (red.routers.empty()) { cerr << "Error: No hay routers. Use la opcion 'Cargar Topologia' o 'Agregar Router' primero." << endl; return; }
     int origen, destino, costo;
-    cout << "\n--- Agregar Enlace (Punto B.a) ---" << endl;
+    cout << "\n--- Agregar Enlace (B.a) ---" << endl;
     cout << "Origen ID: ";
-    if (!(cin >> origen)) return;
+    if (!(cin >> origen)) { limpiarEntrada(); return; }
     cout << "Destino ID: ";
-    if (!(cin >> destino)) return;
+    if (!(cin >> destino)) { limpiarEntrada(); return; }
     cout << "Costo: ";
-    if (!(cin >> costo)) return;
+    if (!(cin >> costo)) { limpiarEntrada(); return; }
 
     if (red.getRouter(origen) && red.getRouter(destino) && origen != destino && costo >= 0) {
         red.agregarEnlace(origen, destino, costo);
@@ -182,16 +278,13 @@ void menuAgregarEnlace(Network& red) {
 }
 
 void menuRemoverEnlace(Network& red) {
-    if (red.routers.empty()) {
-        cerr << "Error: No hay red configurada." << endl;
-        return;
-    }
+    if (red.routers.empty()) { cerr << "Error: No hay red configurada." << endl; return; }
     int origen, destino;
-    cout << "\n--- Remover Enlace (Punto B.a) ---" << endl;
+    cout << "\n--- Remover Enlace (B.a) ---" << endl;
     cout << "Origen ID: ";
-    if (!(cin >> origen)) return;
+    if (!(cin >> origen)) { limpiarEntrada(); return; }
     cout << "Destino ID: ";
-    if (!(cin >> destino)) return;
+    if (!(cin >> destino)) { limpiarEntrada(); return; }
 
     red.removerEnlace(origen, destino);
     red.actualizarTablas();
@@ -212,12 +305,12 @@ void menuTopologiaModificada(Network& red) {
         cout << "5. Remover Enlace (B.a)" << endl;
         cout << "6. Cambiar Costo de un Enlace" << endl;
         cout << "7. Ver Tablas de Enrutamiento" << endl;
+        cout << "8. Consultar Costo y Ruta (C y D)" << endl;
         cout << "0. Regresar al Menu Principal" << endl;
         cout << "Ingrese su opcion: ";
 
         if (!(cin >> opcion)) {
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            limpiarEntrada();
             opcion = -1;
         }
 
@@ -229,6 +322,7 @@ void menuTopologiaModificada(Network& red) {
         case 5: menuRemoverEnlace(red); break;
         case 6: menuCambiarCosto(red); break;
         case 7: cout << "\n*** Tablas de Enrutamiento Actuales ***" << endl; mostrarTodasLasTablas(red); break;
+        case 8: menuConsultarRuta(red); break;
         case 0: cout << "Regresando al menu principal." << endl; break;
         default: cerr << "Opcion invalida. Intente de nuevo." << endl; break;
         }
@@ -255,8 +349,7 @@ int main() {
         cout << "Ingrese su opcion: ";
 
         if (!(cin >> opcion)) {
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            limpiarEntrada();
             opcion = -1;
         }
 

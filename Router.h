@@ -35,8 +35,10 @@ public:
 
     int getDistancia() const { return distancia; }
     int getId() const { return idRouter; }
-    void confDistancia(int d) { distancia = d; }
+
+    void confDistancia(int dist) { distancia = dist; }
     void removerVecino(int id_vecino);
+    std::vector<int> obtenerCaminoMasCorto(int destino_id) const;
 };
 
 #endif // ROUTER_H
