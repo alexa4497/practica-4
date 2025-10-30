@@ -12,6 +12,20 @@ using CostoRouter = pair<int, Router*>;
 Router::Router(int id) : idRouter(id), previo(nullptr), distancia(numeric_limits<int>::max()), visitado(false) {
 }
 
+// Dentro de la implementacion de Router::removerVecino
+void Router::removerVecino(int id_vecino) {
+    auto it = vecinos.begin();
+    while (it != vecinos.end()) {
+        if (it->first->idRouter == id_vecino) {
+            it = vecinos.erase(it);
+            return;
+        }
+        ++it;
+    }
+}
+
+// ... (Resto del codigo, incluyendo nuevoVecino y actualizarCostoVecino silenciados)
+
 void Router::nuevoVecino(Router* vecino, int costo) {
     for (auto& par : vecinos) {
         if (par.first->idRouter == vecino->idRouter) {
@@ -116,3 +130,5 @@ void Router::dijkstra(Network* network) {
         this->tablaEnrutamiento[destino_id] = {costo_total, siguiente_salto_id};
     }
 }
+
+

@@ -1,8 +1,8 @@
 #include "Network.h"
 #include <iostream>
-#include <map>
+#include <sstream>
+#include <fstream>
 #include <string>
-
 using namespace std;
 
 Network::~Network() {
@@ -66,7 +66,7 @@ void Network::cambiarIdRouter(int id_actual, int nuevo_id) {
     routers[nuevo_id] = r;
     routers.erase(id_actual);
 
-    // cout << "\nID del Router cambiado de " << id_actual << " a " << nuevo_id << "." << endl; // Silenciado
+
 }
 
 void Network::actualizarTablas() {
@@ -76,6 +76,46 @@ void Network::actualizarTablas() {
     }
 }
 
+
+
+
+void Network::removerEnlace(int id1, int id2) {
+    Router* r1 = getRouter(id1);
+    Router* r2 = getRouter(id2);
+    if (r1 && r2) {
+        r1->removerVecino(id2);
+        r2->removerVecino(id1);
+        cout << "Enlace entre " << id1 << " y " << id2 << " removido." << endl;
+    } else {
+        cerr << "Error: Router(s) no encontrado(s) al intentar remover enlace." << endl;
+    }
+}
+
+// Implementación para remover un router (debe limpiar todos sus enlaces antes)
+void Network::removerRouter(int id) {
+    if (!routers.count(id)) {
+        cerr << "Error: El Router con ID " << id << " no existe." << endl;
+        return;
+    }
+
+    Router* router_a_remover = routers.at(id);
+
+    // 1. Eliminar las referencias de este router en sus vecinos (romper todos los enlaces)
+    for (const auto& enlace : router_a_remover->vecinos) {
+        Router* vecino = enlace.first;
+        if (vecino) {
+            vecino->removerVecino(id);
+        }
+    }
+
+    // 2. Eliminar de la lista de routers y liberar memoria
+    delete router_a_remover;
+    routers.erase(id);
+
+    cout << "Router " << id << " y todos sus enlaces removidos." << endl;
+}
+
+// Implementación para cargar topología desde archivo (Punto B.c)
 void Network::cargarTopologia(const string& archivo) {
     ifstream file(archivo);
     if (!file.is_open()) {
@@ -83,40 +123,40 @@ void Network::cargarTopologia(const string& archivo) {
         return;
     }
 
+    // Limpiar la red existente antes de cargar la nueva
     for (auto const& [id, router] : routers) {
         delete router;
     }
     routers.clear();
 
     string line;
-    bool routers_leidos = false;
+    cout << "Cargando topologia desde archivo..." << endl;
 
-    if (getline(file, line) && line.find("ROUTERS:") == 0) {
-        string ids_str = line.substr(8);
-        stringstream ss(ids_str);
-        int id;
-        while (ss >> id) {
-            agregarRouter(id);
-            routers_leidos = true;
-        }
-    }
-
-    if (!routers_leidos) {
-        cerr << "Error: Formato incorrecto o no se encontraron IDs de routers en el archivo." << endl;
-        return;
-    }
-
-    // cout << "\nCargando enlaces..." << endl; // Silenciado
     while (getline(file, line)) {
-        if (line.find("ENLACE:") == 0) {
-            stringstream ss(line.substr(7));
+        if (line.empty() || line[0] == '#') continue; // Ignorar lineas vacias o comentarios
+
+        stringstream ss(line);
+        string tipo;
+        ss >> tipo;
+
+        if (tipo == "ROUTERS:") {
+            int id;
+            while (ss >> id) {
+                agregarRouter(id);
+            }
+        } else if (tipo == "ENLACE:") {
             int id1, id2, costo;
             if (ss >> id1 >> id2 >> costo) {
+                // Si el router no fue listado en la seccion ROUTERS, lo agrega al encontrar un enlace
+                if (!routers.count(id1)) agregarRouter(id1);
+                if (!routers.count(id2)) agregarRouter(id2);
                 agregarEnlace(id1, id2, costo);
             }
         }
     }
 
     file.close();
-    // cout << "Carga de topologia desde archivo finalizada." << endl; // Silenciado
+    if (routers.empty()) {
+        cerr << "ADVERTENCIA: Archivo leido pero no se creo ningun router." << endl;
+    }
 }
